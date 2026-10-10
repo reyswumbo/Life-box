@@ -21,6 +21,15 @@ class PetAnimationControllerTest {
         defaultActionMs = 300
     )
 
+    private val quietTiming = PetAnimationController.Timing(
+        idleMinMs = 1_000_000,
+        idleJitterMs = 0,
+        blinkMs = 150,
+        lookMs = 150,
+        curiousMs = 150,
+        defaultActionMs = 300
+    )
+
     @Test
     fun startsIdleAndInvisible() = runTest {
         val controller = PetAnimationController(this, Random(1), fastTiming)
@@ -50,7 +59,7 @@ class PetAnimationControllerTest {
 
     @Test
     fun triggerShowsStateThenReturnsToIdle() = runTest {
-        val controller = PetAnimationController(this, Random(3), fastTiming)
+        val controller = PetAnimationController(this, Random(3), quietTiming)
         try {
             controller.setVisible(true)
 
@@ -68,7 +77,7 @@ class PetAnimationControllerTest {
 
     @Test
     fun newTriggerCancelsPreviousAction() = runTest {
-        val controller = PetAnimationController(this, Random(5), fastTiming)
+        val controller = PetAnimationController(this, Random(5), quietTiming)
         try {
             controller.setVisible(true)
 
@@ -89,7 +98,7 @@ class PetAnimationControllerTest {
 
     @Test
     fun playSequenceRunsStepsInOrder() = runTest {
-        val controller = PetAnimationController(this, Random(9), fastTiming)
+        val controller = PetAnimationController(this, Random(9), quietTiming)
         try {
             controller.setVisible(true)
 
@@ -135,7 +144,7 @@ class PetAnimationControllerTest {
 
     @Test
     fun stopAllResetsStateAndHaltsIdle() = runTest {
-        val controller = PetAnimationController(this, Random(11), fastTiming)
+        val controller = PetAnimationController(this, Random(11), quietTiming)
         controller.setVisible(true)
 
         controller.trigger(PetAnimationState.EATING_LINK, durationMs = 1000)
