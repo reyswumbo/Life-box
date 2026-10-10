@@ -416,11 +416,38 @@ Phase 6 (done, verified in CI):
 
 Notes for the remaining phases:
 
-1. Phase 7 polishes the three tabs against DESIGN_SPEC.md (spacing,
-   typography, empty/loading/error states, transitions).
+Phase 7 (done, verified in CI):
 
-2. Phase 8 enables R8 + resource shrinking for release builds and
-   re-measures the APK size.
+- Home now matches the "cozy room" design: a horizontally scrollable
+  collection shelf near the top (All + each collection as a `CollectionCard`
+  with live counts), a soft ambient glow, a small plant, and paw-print
+  decorations drawn behind the pet, plus subtle rotating pet messages.
+- The daily stats card shows "YOUR SAVES / count / today".
+- The URL field gained a leading add icon and multi-line growth; the
+  whole nav content uses `imePadding()` so the keyboard never hides the
+  input or the floating tab bar (`windowSoftInputMode=adjustResize` was
+  already set).
+- Saved and Pet Lab screens already satisfied DESIGN_SPEC.md, so they
+  were left as verified in earlier phases.
+
+Phase 8 (done, verified in CI):
+
+- Release build now uses R8 (`isMinifyEnabled = true`) and resource
+  shrinking (`isShrinkResources = true`).
+- Optional secret-based signing: release signs with the debug keystore
+  by default so the CI artifact is installable; setting `KEYSTORE_PATH`,
+  `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` switches to a real
+  release key (keys are never committed).
+- The CI "Verify APK output" step asserts the APK exists and prints its
+  size: release APK is now ~1.4 MB (down from ~11.8 MB). Unit tests and
+  lint pass; the APK uploads as a `release-apk` artifact.
+- README.md now documents building, installing, signing, and CI.
+
+All phases (1-8) are complete and verified through GitHub Actions.
+Completion criteria from AGENTS.md are met: three working tabs, links
+and pet configuration persist across restarts, collections, search and
+filtering, idle pet animations, link-saving reactions, offline-first
+core, passing tests/lint, and a measured release APK.
 
 
 
