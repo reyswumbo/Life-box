@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -59,7 +60,9 @@ fun LifeInboxApp() {
         NavHost(
             navController = navController,
             startDestination = AppTab.Home.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .imePadding()
         ) {
             composable(AppTab.Home.route) { HomeScreen() }
             composable(AppTab.Saved.route) { SavedScreen() }

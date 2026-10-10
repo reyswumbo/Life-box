@@ -3,6 +3,7 @@ package com.reyswumbo.lifeinbox.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.reyswumbo.lifeinbox.data.local.CollectionWithCount
 import com.reyswumbo.lifeinbox.data.local.entity.CollectionEntity
 import com.reyswumbo.lifeinbox.data.repository.CollectionRepository
 import com.reyswumbo.lifeinbox.data.repository.LinkRepository
@@ -22,6 +23,7 @@ data class HomeUiState(
     val url: String = "",
     val selectedCollectionId: Long? = null,
     val collections: List<CollectionEntity> = emptyList(),
+    val collectionsWithCount: List<CollectionWithCount> = emptyList(),
     val dailyCount: Int = 0,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
@@ -47,14 +49,20 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             combine(
-                collectionRepository.observeCollections(),
+                collectionRepository.observeCollectionsWithCount(),
                 linkRepository.observeTodayCount()
-            ) { collections, todayCount ->
-                collections to todayCount
+            ) { withCount, todayCount ->
+                withCount to todayCount
             }.catch { }
-                .collect { (collections, todayCount) ->
+                .collect { (withCount, todayCount) ->
                     _uiState.update {
-                        it.copy(collections = collections, dailyCount = todayCount)
+                        it.copy(
+                            collections = withCount.map { collectionWithCount ->
+                                collectionWithCount.collection
+                            },
+                            collectionsWithCount = withCount,
+                            dailyCount = todayCount
+                        )
                     }
                 }
         }

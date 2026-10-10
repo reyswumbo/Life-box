@@ -382,9 +382,45 @@ Issues found and resolved during Phase 4:
 
 Notes for upcoming phases:
 
-1. Phase 5 connects the eating sequence to the real save workflow
-   and animates the link card toward the pet.
-2. Phase 6 persists `PetConfig` and adds the customization editor.
+Phase 5 (done, verified in CI):
+
+- Added `observeCreatedSince` to `LinkDao` and
+  `LinkRepository.observeTodayCount()` (start-of-day computed from an
+  injectable clock using `java.util.Calendar`, testable).
+- Added `HomeViewModel` + factory with URL input, collection selector,
+  live daily count, isSaving guard, and `HomeEvent` (Saved/Failed).
+- Rebuilt `HomeScreen`: the pet is the centerpiece; saving a link plays
+  the coordinated sequence RECEIVING -> OPEN_MOUTH -> EATING_LINK ->
+  SWALLOWING -> CELEBRATING while a small link card flies into the pet's
+  mouth (overlay driven by a tweened progress), then clears the input.
+  Database failures surface as an inline error and never trigger the
+  eating animation.
+- Tests: `dailyCountCountsOnlyCurrentDay`,
+  `dailyCountSurvivesDuplicateAddAttempt`.
+
+Phase 6 (done, verified in CI):
+
+- `PetConfig` persisted in Room: new `pet_config` table (single row),
+  `PetConfigEntity` + mapper, `PetConfigDao`, `PetConfigRepository`.
+- Database bumped to version 2 with a hand-written `MIGRATION_1_2` that
+  creates the table and seeds the default "Pocket Pal" row; fresh DBs
+  fall back to `PetConfig.Default`. `app/schemas/2.json` committed.
+- `AppContainer` exposes a shared `StateFlow<PetConfig>` so Home and Pet
+  Lab always render the saved appearance.
+- Full Pet Lab editor: character name, body/eyes/accessories/texture
+  galleries with live `PetCanvas` previews, body/eye/accent color
+  palettes, live `PetStage` preview, CUSTOMIZING reaction on option
+  change, CELEBRATING + snackbar on save.
+- Tests: `PetConfigRepositoryTest` (defaults, persist/restore,
+  replace, seeded row in upgraded DB).
+
+Notes for the remaining phases:
+
+1. Phase 7 polishes the three tabs against DESIGN_SPEC.md (spacing,
+   typography, empty/loading/error states, transitions).
+
+2. Phase 8 enables R8 + resource shrinking for release builds and
+   re-measures the APK size.
 
 
 

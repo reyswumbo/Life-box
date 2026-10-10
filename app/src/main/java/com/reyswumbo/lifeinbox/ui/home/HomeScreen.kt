@@ -1,6 +1,7 @@
 package com.reyswumbo.lifeinbox.ui.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +16,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AssistChip
@@ -33,12 +38,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -51,10 +60,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.reyswumbo.lifeinbox.LifeInboxApplication
 import com.reyswumbo.lifeinbox.domain.pet.PetAnimationState
+import com.reyswumbo.lifeinbox.ui.saved.CollectionCard
+import com.reyswumbo.lifeinbox.ui.saved.CollectionVisuals
 import com.reyswumbo.lifeinbox.ui.pet.PetStage
 import com.reyswumbo.lifeinbox.ui.pet.rememberPetAnimationController
 import com.reyswumbo.lifeinbox.ui.theme.LifeInboxColors
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
 import kotlinx.coroutines.delay
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
@@ -74,6 +88,37 @@ fun HomeScreen() {
     var saveTick by remember { mutableStateOf(0) }
     var eatingProgress by remember { mutableStateOf(0f) }
     var collectionMenu by remember { mutableStateOf(false) }
+
+    val idleMessages = remember {
+        listOf(
+            "Take your time.",
+            "Ready for your next discovery?",
+            "Your little ideas are safe here."
+        )
+    }
+    var msgIndex by remember { mutableIntStateOf(0) }
+    var showNotice by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(7000)
+            msgIndex = (msgIndex + 1) % idleMessages.size
+        }
+    }
+    LaunchedEffect(saveTick) {
+        if (saveTick > 0) {
+            showNotice = true
+            delay(4500)
+            showNotice = false
+        }
+    }
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null) {
+            showNotice = true
+            delay(6500)
+            showNotice = false
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -111,8 +156,15 @@ fun HomeScreen() {
         ?.name
         ?: "Inbox"
 
+    val shownMessage = if (showNotice) uiState.message else idleMessages[msgIndex]
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val density = LocalDensity.current
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawAmbientRoom(size.width, size.height)
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -135,6 +187,36 @@ fun HomeScreen() {
                 DailyCountChip(count = uiState.dailyCount)
             }
 
+            Spacer(Modifier.height(12.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(end = 4.dp)
+            ) {
+                item(key = "all") {
+                    CollectionCard(
+                        name = "All",
+                        count = uiState.collectionsWithCount.sumOf { it.linkCount },
+                        color = LifeInboxColors.PaleSage,
+                        icon = Icons.Filled.Apps,
+                        selected = uiState.selectedCollectionId == null,
+                        onClick = { viewModel.onCollectionSelected(null) },
+                        onLongClick = null
+                    )
+                }
+                items(uiState.collectionsWithCount, key = { it.collection.id }) { item ->
+                    CollectionCard(
+                        name = item.collection.name,
+                        count = item.linkCount,
+                        color = CollectionVisuals.colorFromHex(item.collection.colorHex),
+                        icon = CollectionVisuals.iconFor(item.collection.icon),
+                        selected = uiState.selectedCollectionId == item.collection.id,
+                        onClick = { viewModel.onCollectionSelected(item.collection.id) },
+                        onLongClick = null
+                    )
+                }
+            }
+
             PetStage(
                 config = petConfig,
                 controller = controller,
@@ -145,7 +227,7 @@ fun HomeScreen() {
             )
 
             Text(
-                text = uiState.message,
+                text = shownMessage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = LifeInboxColors.SecondaryText,
                 textAlign = TextAlign.Center
@@ -174,8 +256,16 @@ fun HomeScreen() {
                     onValueChange = viewModel::onUrlChange,
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Paste a link to save...") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(22.dp)
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = LifeInboxColors.SecondaryText
+                        )
+                    },
+                    singleLine = false,
+                    shape = RoundedCornerShape(22.dp),
+                    maxLines = 3
                 )
                 IconButton(
                     onClick = viewModel::submit,
@@ -261,6 +351,58 @@ fun HomeScreen() {
     }
 }
 
+private fun DrawScope.drawAmbientRoom(width: Float, height: Float) {
+    drawCircle(
+        color = LifeInboxColors.SoftYellow.copy(alpha = 0.30f),
+        radius = min(width, height) * 0.42f,
+        center = Offset(width * 0.5f, height * 0.40f)
+    )
+
+    val green = LifeInboxColors.Sage.copy(alpha = 0.55f)
+    val potColor = LifeInboxColors.DarkText.copy(alpha = 0.10f)
+    val plantCx = width * 0.13f
+    val plantCy = height * 0.68f
+
+    val pot = Path().apply {
+        moveTo(plantCx - 16f, plantCy)
+        lineTo(plantCx + 16f, plantCy)
+        lineTo(plantCx + 11f, plantCy + 20f)
+        lineTo(plantCx - 11f, plantCy + 20f)
+        close()
+    }
+    drawPath(pot, potColor)
+
+    repeat(3) { i ->
+        rotate(
+            degrees = -28f + i * 28f,
+            pivot = Offset(plantCx, plantCy - 4f)
+        ) {
+            drawOval(
+                color = green,
+                topLeft = Offset(plantCx - 5f, plantCy - 36f),
+                size = Size(10f, 32f)
+            )
+        }
+    }
+
+    listOf(
+        width * 0.79f to height * 0.30f,
+        width * 0.87f to height * 0.38f,
+        width * 0.83f to height * 0.46f
+    ).forEach { (px, py) ->
+        drawPaw(px, py)
+    }
+}
+
+private fun DrawScope.drawPaw(cx: Float, cy: Float) {
+    val alpha = 0.16f
+    drawCircle(LifeInboxColors.DarkText.copy(alpha = alpha), radius = 4f, center = Offset(cx, cy))
+    drawCircle(LifeInboxColors.DarkText.copy(alpha = alpha), radius = 2.4f, center = Offset(cx - 4f, cy - 3f))
+    drawCircle(LifeInboxColors.DarkText.copy(alpha = alpha), radius = 2.4f, center = Offset(cx + 4f, cy - 3f))
+    drawCircle(LifeInboxColors.DarkText.copy(alpha = alpha), radius = 2.4f, center = Offset(cx - 1.5f, cy - 4.5f))
+    drawCircle(LifeInboxColors.DarkText.copy(alpha = alpha), radius = 2.4f, center = Offset(cx + 1.5f, cy - 4.5f))
+}
+
 @Composable
 private fun DailyCountChip(count: Int) {
     Card(
@@ -283,6 +425,12 @@ private fun DailyCountChip(count: Int) {
                 text = "$count",
                 style = MaterialTheme.typography.titleMedium,
                 color = LifeInboxColors.DarkText
+            )
+            Text(
+                text = "today",
+                style = MaterialTheme.typography.labelSmall,
+                color = LifeInboxColors.SecondaryText,
+                fontSize = 9.sp
             )
         }
     }
