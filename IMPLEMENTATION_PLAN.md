@@ -327,5 +327,65 @@ Notes for upcoming phases:
 1. `Home` and `Pet Lab` tabs remain placeholders until Phases 4-7.
 2. Release build still lacks R8 / resource shrinking (Phase 8).
 
+### Phase 4: Virtual Pet Renderer — COMPLETED
+
+Status: verified by GitHub Actions run `38045558586` on commit
+`fa69bd5` (all unit tests passed, Android lint passed, release APK
+built and uploaded).
+
+Delivered:
+
+- Pet domain model `PetConfig` with body shapes (Round, Boxy,
+  Fluffy, Triangle, Heart), eye styles (Normal, Sleepy, Happy,
+  Curious), accessories (None, Crown, Horns, Hat), textures
+  (Smooth, Fluffy, Fuzzy), plus curated body / eye / accent color
+  palettes.
+- `PetAnimationState` covering the full state set required by
+  DESIGN_SPEC.md (IDLE, BLINKING, LOOKING, CURIOUS, RECEIVING,
+  OPEN_MOUTH, EATING_LINK, SWALLOWING, CELEBRATING, SLEEPING,
+  CONFUSED, CUSTOMIZING).
+- `PetAnimationController`: a centralized, testable controller
+  that owns the current state, generates idle behavior (blinking,
+  looking, occasional curious reactions) on a randomized schedule,
+  pre-empts the idle loop for externally triggered actions and
+  sequences, guarantees only one animation runs at a time by
+  cancelling the previous action, and fully halts work when hidden.
+- `ui/pet/Pet.kt` renderer on Compose Canvas with clearly
+  separated drawing layers: ground shadow, platform opening, body
+  (per-shape `Path`), texture overlay, eyes (per-style, with
+  openness and gaze shift), mouth (closed smile or open for
+  eating), and accessories. Idle floating, squash/stretch, blink,
+  gaze, mouth and tilt are driven by `animateFloatAsState` and an
+  `InfiniteTransition`.
+- `PetStage` composable that pauses idle animation via the
+  `Lifecycle` owner (ON_START / ON_STOP), satisfying the
+  "reduce work when not visible" requirement, plus a pure
+  `PetCanvas` for static previews.
+- Home now renders the pet as the visual centerpiece; Pet Lab
+  shows a static preview.
+
+Tests added (all passing in CI):
+
+- `PetAnimationControllerTest` — idle expressions when visible,
+  one-shot trigger returning to idle, action cancellation, ordered
+  sequences, ignoring triggers while hidden, and halting idle work
+  when hidden (`runTest` virtual time).
+
+Issues found and resolved during Phase 4:
+
+- First test run hung because `runTest` waits for the controller's
+  infinite idle loop; tests now cancel the controller (and use an
+  idle-disabled timing for pure action tests) before completing.
+- The release Kotlin compile crashed the Gradle daemon with a JVM
+  Metaspace exhaustion (`MaxMetaspaceSize=384m`); `gradle.properties`
+  now allows a 2048m heap and 768m metaspace.
+
+Notes for upcoming phases:
+
+1. Phase 5 connects the eating sequence to the real save workflow
+   and animates the link card toward the pet.
+2. Phase 6 persists `PetConfig` and adds the customization editor.
+
+
 
 
