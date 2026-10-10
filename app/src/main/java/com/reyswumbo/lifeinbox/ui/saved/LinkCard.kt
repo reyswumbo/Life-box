@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MoveDown
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -45,6 +46,7 @@ fun LinkCard(
     onOpen: () -> Unit,
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
+    onMove: () -> Unit,
     onCopy: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
@@ -124,6 +126,14 @@ fun LinkCard(
                     onClick = {
                         menuExpanded = false
                         onEdit()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Move") },
+                    leadingIcon = { Icon(Icons.Filled.MoveDown, contentDescription = null) },
+                    onClick = {
+                        menuExpanded = false
+                        onMove()
                     }
                 )
                 DropdownMenuItem(

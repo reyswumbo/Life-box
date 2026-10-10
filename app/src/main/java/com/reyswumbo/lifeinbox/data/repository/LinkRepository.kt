@@ -90,6 +90,15 @@ class LinkRepository(
         }
     }
 
+    suspend fun moveLink(id: Long, collectionId: Long): SaveLinkResult {
+        val existing = linkDao.getById(id)
+            ?: return SaveLinkResult.Error("This link no longer exists.")
+        if (existing.collectionId == collectionId) {
+            return SaveLinkResult.Success(existing.id)
+        }
+        return updateLink(id, existing.title, existing.notes, collectionId)
+    }
+
     suspend fun deleteLink(id: Long): Boolean = try {
         linkDao.deleteById(id)
         true
