@@ -170,4 +170,25 @@ class LinkRepositoryTest {
     fun isDuplicateReturnsFalseForInvalidUrl() = runTest {
         assertTrue(!linkRepository.isDuplicate("not a link"))
     }
+
+    @Test
+    fun dailyCountCountsOnlyCurrentDay() = runTest {
+        now = 1_800_000_000_000L
+        linkRepository.addLink("https://example.com/today", null, "", null)
+        assertEquals(1, linkRepository.observeTodayCount().first())
+
+        now += 3L * 24 * 60 * 60 * 1000
+        assertEquals(0, linkRepository.observeTodayCount().first())
+
+        linkRepository.addLink("https://example.com/today2", null, "", null)
+        assertEquals(1, linkRepository.observeTodayCount().first())
+    }
+
+    @Test
+    fun dailyCountSurvivesDuplicateAddAttempt() = runTest {
+        now = 1_800_000_000_000L
+        linkRepository.addLink("https://example.com/dup", null, "", null)
+        linkRepository.addLink("https://example.com/dup", null, "", null)
+        assertEquals(1, linkRepository.observeTodayCount().first())
+    }
 }

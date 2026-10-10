@@ -7,6 +7,7 @@ import com.reyswumbo.lifeinbox.data.local.entity.LinkEntity
 import com.reyswumbo.lifeinbox.domain.UrlValidationResult
 import com.reyswumbo.lifeinbox.domain.UrlValidator
 import kotlinx.coroutines.flow.Flow
+import java.util.Calendar
 
 sealed interface SaveLinkResult {
     data class Success(val id: Long) : SaveLinkResult
@@ -23,6 +24,18 @@ class LinkRepository(
 
     fun observeLinks(query: String): Flow<List<LinkEntity>> =
         if (query.isBlank()) linkDao.observeAll() else linkDao.search(query.trim())
+
+    fun observeTodayCount(): Flow<Int> = linkDao.observeCreatedSince(startOfDay(clock()))
+
+    private fun startOfDay(epochMillis: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = epochMillis
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
 
     suspend fun addLink(
         rawUrl: String,

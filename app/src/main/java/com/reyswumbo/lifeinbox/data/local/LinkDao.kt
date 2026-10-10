@@ -29,6 +29,9 @@ interface LinkDao {
     @Query("SELECT * FROM links ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<LinkEntity>>
 
+    @Query("SELECT COUNT(*) FROM links WHERE createdAt >= :startOfDay")
+    fun observeCreatedSince(startOfDay: Long): Flow<Int>
+
     @Query(
         """
         SELECT * FROM links
