@@ -37,7 +37,11 @@ jobs:
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Verify APK output
-        run: ls -la app/build/outputs/apk/release/
+        run: |
+          APK=$(find app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
+          test -n "$APK"
+          ls -lh "$APK"
+          echo "Release APK: $APK"
 
       - name: Upload release APK
         uses: actions/upload-artifact@v4
