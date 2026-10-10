@@ -30,81 +30,99 @@ class PetAnimationControllerTest {
     @Test
     fun idleLoopProducesExpressionsWhenVisible() = runTest {
         val controller = PetAnimationController(this, Random(7), fastTiming)
-        controller.setVisible(true)
+        try {
+            controller.setVisible(true)
 
-        advanceTimeBy(120)
-        runCurrent()
+            advanceTimeBy(120)
+            runCurrent()
 
-        assertTrue(controller.state.value in setOf(
-            PetAnimationState.BLINKING,
-            PetAnimationState.LOOKING,
-            PetAnimationState.CURIOUS
-        ))
+            assertTrue(
+                controller.state.value in setOf(
+                    PetAnimationState.BLINKING,
+                    PetAnimationState.LOOKING,
+                    PetAnimationState.CURIOUS
+                )
+            )
+        } finally {
+            controller.stopAll()
+        }
     }
 
     @Test
     fun triggerShowsStateThenReturnsToIdle() = runTest {
         val controller = PetAnimationController(this, Random(3), fastTiming)
-        controller.setVisible(true)
+        try {
+            controller.setVisible(true)
 
-        controller.trigger(PetAnimationState.RECEIVING, durationMs = 300)
-        runCurrent()
-        assertEquals(PetAnimationState.RECEIVING, controller.state.value)
+            controller.trigger(PetAnimationState.RECEIVING, durationMs = 300)
+            runCurrent()
+            assertEquals(PetAnimationState.RECEIVING, controller.state.value)
 
-        advanceTimeBy(320)
-        runCurrent()
-        assertEquals(PetAnimationState.IDLE, controller.state.value)
+            advanceTimeBy(320)
+            runCurrent()
+            assertEquals(PetAnimationState.IDLE, controller.state.value)
+        } finally {
+            controller.stopAll()
+        }
     }
 
     @Test
     fun newTriggerCancelsPreviousAction() = runTest {
         val controller = PetAnimationController(this, Random(5), fastTiming)
-        controller.setVisible(true)
+        try {
+            controller.setVisible(true)
 
-        controller.trigger(PetAnimationState.RECEIVING, durationMs = 1000)
-        runCurrent()
-        controller.trigger(PetAnimationState.CELEBRATING, durationMs = 1000)
-        runCurrent()
+            controller.trigger(PetAnimationState.RECEIVING, durationMs = 1000)
+            runCurrent()
+            controller.trigger(PetAnimationState.CELEBRATING, durationMs = 1000)
+            runCurrent()
 
-        assertEquals(PetAnimationState.CELEBRATING, controller.state.value)
+            assertEquals(PetAnimationState.CELEBRATING, controller.state.value)
 
-        advanceTimeBy(1010)
-        runCurrent()
-        assertEquals(PetAnimationState.IDLE, controller.state.value)
+            advanceTimeBy(1010)
+            runCurrent()
+            assertEquals(PetAnimationState.IDLE, controller.state.value)
+        } finally {
+            controller.stopAll()
+        }
     }
 
     @Test
     fun playSequenceRunsStepsInOrder() = runTest {
         val controller = PetAnimationController(this, Random(9), fastTiming)
-        controller.setVisible(true)
+        try {
+            controller.setVisible(true)
 
-        controller.playSequence(
-            listOf(
-                PetAnimationState.RECEIVING to 100,
-                PetAnimationState.EATING_LINK to 100,
-                PetAnimationState.SWALLOWING to 100,
-                PetAnimationState.CELEBRATING to 100
+            controller.playSequence(
+                listOf(
+                    PetAnimationState.RECEIVING to 100,
+                    PetAnimationState.EATING_LINK to 100,
+                    PetAnimationState.SWALLOWING to 100,
+                    PetAnimationState.CELEBRATING to 100
+                )
             )
-        )
 
-        runCurrent()
-        assertEquals(PetAnimationState.RECEIVING, controller.state.value)
+            runCurrent()
+            assertEquals(PetAnimationState.RECEIVING, controller.state.value)
 
-        advanceTimeBy(110)
-        runCurrent()
-        assertEquals(PetAnimationState.EATING_LINK, controller.state.value)
+            advanceTimeBy(110)
+            runCurrent()
+            assertEquals(PetAnimationState.EATING_LINK, controller.state.value)
 
-        advanceTimeBy(100)
-        runCurrent()
-        assertEquals(PetAnimationState.SWALLOWING, controller.state.value)
+            advanceTimeBy(100)
+            runCurrent()
+            assertEquals(PetAnimationState.SWALLOWING, controller.state.value)
 
-        advanceTimeBy(100)
-        runCurrent()
-        assertEquals(PetAnimationState.CELEBRATING, controller.state.value)
+            advanceTimeBy(100)
+            runCurrent()
+            assertEquals(PetAnimationState.CELEBRATING, controller.state.value)
 
-        advanceTimeBy(100)
-        runCurrent()
-        assertEquals(PetAnimationState.IDLE, controller.state.value)
+            advanceTimeBy(100)
+            runCurrent()
+            assertEquals(PetAnimationState.IDLE, controller.state.value)
+        } finally {
+            controller.stopAll()
+        }
     }
 
     @Test
