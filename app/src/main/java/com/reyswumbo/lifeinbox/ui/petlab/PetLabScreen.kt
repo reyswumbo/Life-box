@@ -70,8 +70,12 @@ fun PetLabScreen() {
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            snackbarHostState.showSnackbar(event.text)
-            controller.trigger(PetAnimationState.CELEBRATING, 1000)
+            when (event) {
+                is PetLabEvent.Message -> {
+                    snackbarHostState.showSnackbar(event.text)
+                    controller.trigger(PetAnimationState.CELEBRATING, 1000)
+                }
+            }
         }
     }
 

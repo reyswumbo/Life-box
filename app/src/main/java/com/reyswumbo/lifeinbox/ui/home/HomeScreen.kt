@@ -68,7 +68,6 @@ fun HomeScreen() {
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val application = LocalContext.current.applicationContext as LifeInboxApplication
     val petConfig by application.container.petConfig.collectAsStateWithLifecycle()
     val controller = rememberPetAnimationController()
 
