@@ -7,10 +7,12 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.reyswumbo.lifeinbox.data.local.entity.CollectionEntity
 import com.reyswumbo.lifeinbox.data.local.entity.LinkEntity
+import com.reyswumbo.lifeinbox.data.local.entity.PetConfigEntity
+import com.reyswumbo.lifeinbox.data.repository.PetConfigMigration
 
 @Database(
-    entities = [LinkEntity::class, CollectionEntity::class],
-    version = 1,
+    entities = [LinkEntity::class, CollectionEntity::class, PetConfigEntity::class],
+    version = 2,
     exportSchema = true
 )
 abstract class LifeInboxDatabase : RoomDatabase() {
@@ -18,6 +20,8 @@ abstract class LifeInboxDatabase : RoomDatabase() {
     abstract fun linkDao(): LinkDao
 
     abstract fun collectionDao(): CollectionDao
+
+    abstract fun petConfigDao(): PetConfigDao
 
     companion object {
         const val DATABASE_NAME = "life_inbox.db"
@@ -40,6 +44,7 @@ abstract class LifeInboxDatabase : RoomDatabase() {
                 builder.allowMainThreadQueries()
             }
             return builder
+                .addMigrations(PetConfigMigration.MIGRATION_1_2)
                 .addCallback(SeedCallback())
                 .build()
         }

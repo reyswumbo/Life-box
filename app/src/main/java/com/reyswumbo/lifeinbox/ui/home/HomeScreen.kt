@@ -68,6 +68,8 @@ fun HomeScreen() {
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val application = LocalContext.current.applicationContext as LifeInboxApplication
+    val petConfig by application.container.petConfig.collectAsStateWithLifecycle()
     val controller = rememberPetAnimationController()
 
     var saveTick by remember { mutableStateOf(0) }
@@ -135,9 +137,7 @@ fun HomeScreen() {
             }
 
             PetStage(
-                config = remember {
-                    com.reyswumbo.lifeinbox.domain.pet.PetConfig.Default
-                },
+                config = petConfig,
                 controller = controller,
                 modifier = Modifier
                     .fillMaxWidth()
