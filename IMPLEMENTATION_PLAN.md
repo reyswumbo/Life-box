@@ -201,8 +201,8 @@ Issues found and resolved during Phase 1:
 
 Remaining tasks and notes for upcoming phases:
 
-1. Phase 2 must add the KSP plugin. Use KSP `2.2.21-2.0.5`
-   (matches Kotlin 2.2.21) and Room `2.8.5`.
+1. KSP `2.2.21-2.0.5` and Room `2.8.5` were added in Phase 2 and
+   build cleanly in CI.
 2. The release build currently has `isMinifyEnabled = false` and
    `isShrinkResources = false`. Enable R8 and resource shrinking
    in Phase 8, then re-measure the APK.
@@ -215,4 +215,68 @@ Remaining tasks and notes for upcoming phases:
    DESIGN_SPEC.md. Revisit in Phase 7.
 7. Navigation currently uses string routes; type-safe routes are
    an optional refinement for a later phase.
+
+### Phase 2: Database and Link Management — COMPLETED
+
+Status: verified by GitHub Actions run `38044009630` on commit
+`cb78bd1` (32 unit tests passed, Android lint passed, release APK
+built and uploaded as artifact `release-apk`, 11,800,836 bytes;
+Room schema uploaded as artifact `room-schemas`).
+
+Delivered:
+
+- Room persistence: `LifeInboxDatabase` (version 1, `exportSchema
+  = true`), entities `LinkEntity` and `CollectionEntity`, DAOs
+  `LinkDao` and `CollectionDao`.
+- Default collections seeded on first database creation (Inbox as
+  the default, plus Ideas and Inspiration) with stable IDs.
+- Repository layer: `LinkRepository` and `CollectionRepository`
+  isolating all persistence concerns from the UI.
+- URL validation and normalization in pure Kotlin
+  (`domain/UrlValidator.kt`): accepts http/https, rejects
+  malformed input and unsupported schemes, lowercases scheme/host,
+  strips default ports and trailing slashes so duplicates are
+  detected reliably.
+- `LinkRepository.addLink` returns a typed `SaveLinkResult`
+  (Success / Duplicate / InvalidUrl / Error) and never discards the
+  user's input on failure.
+- `SavedViewModel` + `SavedUiState` expose a searchable, sortable
+  `StateFlow` stream combining links and collections, with a
+  one-shot `SavedEvent` channel for saved/updated/message events.
+- `SavedScreen` fully implemented: search field, sort menu
+  (`LinkSortOption`), link cards with favorite toggle, overflow
+  menu (Open / Edit / Copy URL / Delete), add/edit dialog with
+  collection picker, floating action button, snackbars, and
+  loading/empty states. Links open via `Intent.ACTION_VIEW`.
+- Manual dependency injection via `AppContainer`, wired through
+  `LifeInboxApplication` (`android:name` in the manifest).
+- CI now also uploads the generated Room schema as `room-schemas`.
+
+Tests added (all passing in CI):
+
+- `UrlValidatorTest` — scheme handling, normalization, and
+  rejection cases.
+- `LinkSortOptionTest` — sorting order for every option.
+- `LinkRepositoryTest` — Robolectric + in-memory Room verifying
+  seed data, insert, duplicate detection (exact and normalized),
+  invalid URL rejection, delete, update, favorite toggle, and
+  search.
+
+Issues found and resolved during Phase 2:
+
+- Trailing-slash normalization tests failed on the first CI run
+  (run `38043830986`); the validator now strips trailing slashes
+  before comparing, so `.../Path` and `.../Path/` are treated as
+  the same link.
+
+Remaining tasks and notes for upcoming phases:
+
+1. Release build still has `isMinifyEnabled = false` and
+   `isShrinkResources = false` (Phase 8).
+2. Collection management (create / rename / delete / move / filter
+   / counts / safe deletion) is Phase 3. The link editor already
+   allows choosing an existing collection.
+3. `Home` and `Pet Lab` tabs remain placeholders until Phases 4-7.
+4. Consider a UI test for the save-link workflow in a later phase.
+
 
