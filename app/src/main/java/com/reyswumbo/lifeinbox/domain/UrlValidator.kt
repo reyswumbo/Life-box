@@ -61,7 +61,7 @@ object UrlValidator {
     private fun buildNormalized(scheme: String, host: String, uri: URI): String {
         val defaultPort = (scheme == "http" && uri.port == 80) || (scheme == "https" && uri.port == 443)
         val portPart = if (uri.port != -1 && !defaultPort) ":${uri.port}" else ""
-        val pathPart = uri.rawPath?.takeUnless { it.isEmpty() || it == "/" } ?: ""
+        val pathPart = uri.rawPath?.trimEnd('/')?.takeUnless { it.isEmpty() } ?: ""
         val queryPart = uri.rawQuery?.let { "?$it" } ?: ""
         val fragmentPart = uri.rawFragment?.let { "#$it" } ?: ""
         return "$scheme://$host$portPart$pathPart$queryPart$fragmentPart"
