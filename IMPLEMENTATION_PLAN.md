@@ -279,4 +279,53 @@ Remaining tasks and notes for upcoming phases:
 3. `Home` and `Pet Lab` tabs remain placeholders until Phases 4-7.
 4. Consider a UI test for the save-link workflow in a later phase.
 
+### Phase 3: Collection Management — COMPLETED
+
+Status: verified by GitHub Actions run `38044479936` on commit
+`6b48b02` (all unit tests passed, Android lint passed, release APK
+built and uploaded).
+
+Delivered:
+
+- `CollectionDao` extended with insert, case-insensitive name
+  lookup, `observeWithCounts` (per-collection link counts via a
+  correlated subquery), rename/update, link reassignment, and a
+  `@Transaction deleteAndReassign` that moves a collection's links
+  to the fallback collection before deleting it.
+- `CollectionWithCount` projection (embedded entity + link count).
+- `CollectionRepository` now exposes `createCollection`,
+  `renameCollection`, and `deleteCollection`, all returning a typed
+  `CollectionResult` (Success / DuplicateName / Invalid / Error).
+  Names are trimmed, limited to 40 characters, and must be unique
+  (case-insensitive). The default Inbox collection cannot be
+  deleted; deleting a non-empty collection moves its links to Inbox
+  in a single transaction, so no links are silently lost.
+- `LinkRepository.moveLink` to change a link's collection.
+- `SavedViewModel` now streams collections-with-counts plus a
+  `selectedCollectionId` filter, and handles create / rename /
+  delete / move with separate saving and error state for the
+  collection dialog.
+- Saved UI: horizontally scrollable collection shelf (All +
+  Inbox + Ideas + Inspiration + custom) with per-collection
+  counts; selected-state styling; long-press menu to rename or
+  delete (delete hidden for the default collection); a header
+  add-menu (Add link / New collection); a collection editor dialog
+  with icon and color pickers (`CollectionVisuals` curated palette);
+  a delete-confirmation dialog that explains the Inbox fallback
+  policy; and a Move dialog in each link's overflow menu.
+
+Tests added (all passing in CI):
+
+- `CollectionRepositoryTest` — create, case-insensitive duplicate
+  rejection, blank/overlong name rejection, rename (including
+  keeping the same name and rejecting clashes), safe delete that
+  reassigns links to Inbox, default-collection delete rejection,
+  unknown-collection deletion, count accuracy, and link moving.
+
+Notes for upcoming phases:
+
+1. `Home` and `Pet Lab` tabs remain placeholders until Phases 4-7.
+2. Release build still lacks R8 / resource shrinking (Phase 8).
+
+
 
